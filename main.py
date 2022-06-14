@@ -2,13 +2,10 @@ from collections import Counter
 
 
 def count_letters():
-    letters_count_array = []
     with open("text_file.txt", 'r') as f:
         text = f.read()
-        letter_counts = Counter(text)
-        for letter, count in letter_counts.most_common():
-            letters_count_array.append((letter, count))
-        return letters_count_array
+        letter_counts = list(reversed(Counter(text).most_common()))
+        return letter_counts
 
 
 def heapify(arr, n, i):
@@ -41,14 +38,20 @@ def huffman_code(letters_count_array):
 
 
 def merge_items(arr):
-    while len(arr)-1 != 1:
-        arr.append(arr.pop(0) + arr.pop(1))
+    while len(arr) != 1:
+        for letter, count in arr:
+            arr[0] = arr[0] + arr[1]
+            arr.remove(arr[1])
+            heap_sort(arr)
+    return arr
 
 
 def main():
     count_array = count_letters()
     print(count_array)
-    heap_array = heap_sort(count_array)
-    print(heap_array)
+
+    # test = [5, 4, 3, 2, 1]
+    # print(heap_sort(test))
+
 
 main()
