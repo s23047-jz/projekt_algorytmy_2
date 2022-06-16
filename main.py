@@ -1,57 +1,93 @@
-from collections import Counter
+data = {}
+done_item = {}
+routes = {}
 
 
-def count_letters():
-    with open("text_file.txt", 'r') as f:
-        text = f.read()
-        letter_counts = list(reversed(Counter(text).most_common()))
-        return letter_counts
+# I didn't use heap sort because sorted works the same and doesn't take up that much code space
+# And I didn't want to modify it.
+
+def set_text_file_to_string():
+    # read text from file and convert into string
+    text = ""
+    with open('text_file.txt', 'r') as file:
+        text = file.read().rstrip()
+
+    return text
 
 
-def heapify(arr, n, i):
-    largest = i
-    left = 2 * i + 1
-    right = 2 * i + 2
-    if left < n and arr[i] < arr[left]:
-        largest = left
-    if right < n and arr[largest] < arr[right]:
-        largest = right
-    if largest != i:
-        arr[i], arr[largest] = arr[largest], arr[i]
-        heapify(arr, n, largest)
+def read_text(text):
+    # read whole text
+    for character in text.replace('\r', '').replace('\n', ''):
+        if character in data:
+            data[character]['counts'] += 1
+        else:
+            data[character] = {'counts': 1}
+    sorted_array = sorted(data, key=lambda x: data[x]['counts'], reverse=True)
+    return sorted_array
 
 
-def heap_sort(arr):
-    n = len(arr)
-    for i in range(n, -1, -1):
-        heapify(arr, n, i)
-    for i in range(n - 1, 0, -1):
-        arr[i], arr[0] = arr[0], arr[i]
-        heapify(arr, i, 0)
-    return arr
+def merge_items(array):
+    # take first and second item from array and merge them into one item
+    # next we send deleted items to another array to build a tree with this array
+    while len(array) != 1:
+        first_item = array.pop()
+        second_item = array.pop()
+        first_item_value = data[first_item]['counts']
+        second_item_value = data[second_item]['counts']
+        merged_items_value = first_item_value + second_item_value
+        done_item[first_item], done_item[second_item] = data[first_item], data[second_item]
+        del data[first_item], data[second_item]
+        data[str(first_item) + str(second_item)] = {'counts': merged_items_value, 'left': first_item,
+                                                    'right': second_item}
+        array = sorted(data, key=lambda x: data[x]['counts'], reverse=True)
+        done_item[list(data.keys())[0]] = list(data.values())[0]
+
+    return array
 
 
-def huffman_code(letters_count_array):
-    for i in range(len(letters_count_array)):
-        letters_count_array[i] = (letters_count_array[i], i)
-        print(letters_count_array[i])
+def tree(node, char, route):
+    # create tree
+    if 'left' in done_item[node]:
+        if char in done_item[node]['left']:
+            new_route = route + '0'
+            tree(done_item[node]['left'], char, new_route)
+    if 'right' in done_item[node]:
+        if char in done_item[node]['right']:
+            new_route = route + '1'
+            tree(done_item[node]['right'], char, new_route)
+    # without this we got KeyError
+    if 'left' not in done_item[node]:
+        if 'right' not in done_item[node]:
+            routes[char] = route
 
 
-def merge_items(arr):
-    while len(arr) != 1:
-        for letter, count in arr:
-            arr[0] = arr[0] + arr[1]
-            arr.remove(arr[1])
-            heap_sort(arr)
-    return arr
+def create_root_node(text):
+    encoded_text = ""
+    root_node = list(data.keys())[0]
+    for char in root_node:
+        tree(root_node, char, '')
+
+    for char in text.replace('\r', '').replace('\n', ''):
+        encoded_text += routes[char]
+
+    # print('\n Routes: ', routes)
+    # print('\n \n: ', encoded_text)
+
+    # write to files
+    with open('text_file.bin', 'wb') as f:
+        f.write(str.encode(encoded_text))
+        f.close()
+
+    with open('text_file_compressed.txt', 'w') as f:
+        f.write(str(routes))
+        f.close()
 
 
 def main():
-    count_array = count_letters()
-    print(count_array)
-
-    # test = [5, 4, 3, 2, 1]
-    # print(heap_sort(test))
+    text = set_text_file_to_string()
+    sorted_array = read_text(text)
+    merge_items(sorted_array)
+    create_root_node(text)
 
 
 main()
