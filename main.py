@@ -17,7 +17,7 @@ def set_text_file_to_string():
 
 def read_text(text):
     # read whole text
-    for character in text.replace('\r', '').replace('\n', ''):
+    for character in text:
         if character in data:
             data[character]['counts'] += 1
         else:
@@ -67,7 +67,7 @@ def create_root_node(text):
     for char in root_node:
         tree(root_node, char, '')
 
-    for char in text.replace('\r', '').replace('\n', ''):
+    for char in text:
         encoded_text += routes[char]
 
     # print('\n Routes: ', routes)
